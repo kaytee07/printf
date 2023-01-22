@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-
+#include "main.h"
 
 /**
  * checkErr - goes through the loop and check for errors
