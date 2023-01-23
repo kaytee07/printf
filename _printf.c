@@ -1,88 +1,49 @@
-#include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
 #include "main.h"
 
 /**
- * checkErr - goes through the loop and check for errors
- * @format: string to be searched for errors
- * Return: zero if code runs successfully
+ * _printf - prints anything
+ * @format: the format string
+ *
+ * Return: number of bytes printed
  */
-int checkErr(const char *format)
-{
-int i;
-for (i = 0; format[i] != '\0'; i++)
-{
-if (format[i] == '%')
-{
-i++;
-switch (format[i])
-{
-/** if after the % sign is a space return */
-case ' ':
-return (-1);
-break;
-/** if after the % sign is a null char return */
-case '\0':
-return (-1);
-break;
-}
-}
-}
-return (0);
-}
-
-
-/**
- * _printf - sends formatted string to stdout
- * @format: string to searched to for format specifier
- * @...: parameters to replace format specifiers by
- * Return: returns the length of the string
- */
-
 int _printf(const char *format, ...)
 {
-int i, count = 0;
-char *str;
-va_list list;
-va_start(list, format);
-checkErr(format);
-for (i = 0; format[i] != '\0'; i++)
-{
-if (format[i] == '\\')
-{i++;
-if (format[i] == 'n')
-{putchar('\n');
-}
-}
-if (format[i] == '%')
-{i++;
-switch (format[i])
-{case 'c':
-putchar(va_arg(list, int));
-count++;
-break;
-case 's':
-str = va_arg(list, char *);
-fputs(str, stdout);
-count += strlen(str);
-break;
-case '%':
-putchar('%');
-count++;
-break;
-default:
-putchar(format[i]);
-count++;
-break;
-}
-}
-else
-{putchar(format[i]);
-count++;
-}
-} return (count);
-}
+	int sum = 0;
+	va_list ap;
+	char *p, *start;
+	params_t params = PARAMS_INIT;
 
+	va_start(ap, format);
 
+	if (!format || (format[0] == '%' && !format[1]))
+		return (-1);
+	if (format[0] == '%' && format[1] == ' ' && !format[2])
+		return (-1);
+	for (p = (char *)format; *p; p++)
+	{
+		init_params(&params, ap);
+		if (*p != '%')
+		{
+			sum += _putchar(*p);
+			continue;
+		}
+		start = p;
+		p++;
+		while (get_flag(p, &params)) /* while char at p is flag char */
+		{
+			p++; /* next char */
+		}
+		p = get_width(p, &params, ap);
+		p = get_precision(p, &params, ap);
+		if (get_modifier(p, &params))
+			p++;
+		if (!get_specifier(p))
+			sum += print_from_to(start, p,
+				params.l_modifier || params.h_modifier ? p - 1 : 0);
+		else
+			sum += get_print_func(p, ap, &params);
+	}
+	_putchar(BUF_FLUSH);
+	va_end(ap);
+	return (sum);
+}
