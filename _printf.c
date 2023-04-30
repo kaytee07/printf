@@ -1,51 +1,74 @@
 #include "main.h"
 
 /**
- * _printf - prints anything
- * @format: the format string
+ * _printf - prints a formatted string
+ * @format: the format string to print
+ * @...: the optional arguments to insert into the format string
  *
- * Return: number of bytes printed
+ * Return: the number of characters printed, or -1 if an error occurs
  */
-
 int _printf(const char *format, ...)
 {
-int dum = 0;
-va_list list;
-char *p, *start;
-params_t params = PARAMS_INIT;
+    va_list args;  // initialize the variable argument list
+    int count = 0; // initialize the character count
 
-va_start(list, format);
+    // Check for invalid input
+    if (!format)
+        return (-1);
 
-if (!format || (format[0] == '%' && !format[1]))
-return (-1);
-if (format[0] == '%' && format[1] == ' ' && !format[2])
-return (-1);
-for (p = (char *)format; *p; p++)
-{
-init_params(&params, list);
-if (*p != '%')
-{
-dum += _putchar(*p);
-continue;
-}
-start = p;
-p++;
-while (get_flag(p, &params))
-{
-p++;
-}
-p = get_width(p, &params, list);
-p = get_precision(p, &params, list);
-if (get_modifier(p, &params))
-p++;
-if (!get_specifier(p))
-dum += print_from_to(start, p,
-params.l_modifier || params.h_modifier ? p - 1 : 0);
-else
-dum += get_print_func(p, list, &params);
-}
-_putchar(BUF_FLUSH);
-va_end(list);
-return (dum);
-}
+    // Iterate through the format string and process each format specifier
+    va_start(args, format);
+    while (*format)
+    {
+        // If the current character is not a format specifier, print it
+        if (*format != '%')
+        {
+            _putchar(*format++);
+            count++;
+            continue;
+        }
 
+        // Parse the format specifier
+        format++;
+        switch (*format)
+        {
+            case 'c':
+                count += _putchar(va_arg(args, int));
+                break;
+            case 's':
+                count += _puts(va_arg(args, char *));
+                break;
+            case 'd':
+            case 'i':
+                count += print_integer(args);
+                break;
+            case 'u':
+                count += print_unsigned(args);
+                break;
+            case 'o':
+                count += print_octal(args);
+                break;
+            case 'x':
+                count += print_hex(args, 0);
+                break;
+            case 'X':
+                count += print_hex(args, 1);
+                break;
+            case '%':
+                _putchar('%');
+                count++;
+                break;
+            default:
+                _putchar('%');
+                count++;
+                _putchar(*format);
+                count++;
+                break;
+        }
+
+        format++;
+    }
+
+    va_end(args); // clean up the variable argument list
+    return (count); // return the total character count
+}

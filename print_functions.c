@@ -1,129 +1,141 @@
 #include "main.h"
 
 /**
- * print_char - prints character
- * @ap: argument pointer
+ * init_params - clears struct fields and reset buf
  * @params: the parameters struct
+ * @ap: the argument pointer
  *
- * Return: number chars printed
+ * Return: void
  */
-int print_char(va_list ap, params_t *params)
+void init_params(params_t *params, va_list ap)
 {
-	char pad_char = ' ';
-	unsigned int pad = 1, sum = 0, ch = va_arg(ap, int);
+  params->unsign = 0;
 
-	if (params->minus_flag)
-		sum += _putchar(ch);
-	while (pad++ < params->width)
-		sum += _putchar(pad_char);
-	if (!params->minus_flag)
-		sum += _putchar(ch);
-	return (sum);
-}
-/**
- *print_int - prints integer
- * @ap: argument pointer
- * @params: the parameters struct
- *
- * Return: number chars printed
- */
-int print_int(va_list ap, params_t *params)
-{
-	long l;
+  params->plus_flag = 0;
+  params->space_flag = 0;
+  params->hashtag_flag = 0;
+  params->zero_flag = 0;
+  params->minus_flag = 0;
 
-	if (params->l_modifier)
-		l = va_arg(ap, long);
-	else if (params->h_modifier)
-		l = (short int)va_arg(ap, int);
-	else
-		l = (int)va_arg(ap, int);
-	return (print_number(convert(l, 10, 0, params), params));
+  params->width = 0;
+  params->precision = UINT_MAX;
+
+  params->h_modifier = 0;
+  params->l_modifier = 0;
+  (void)ap;
 }
 
 /**
- * print_string - prints string
+ * print_unsigned - prints unsigned int
  * @ap: argument pointer
  * @params: the parameters struct
  *
  * Return: number chars printed
  */
-int print_string(va_list ap, params_t *params)
+int print_unsigned(va_list ap, params_t *params)
 {
-	char *str = va_arg(ap, char *), pad_char = ' ';
-	unsigned int pad = 0, sum = 0, i = 0, j;
-	(void)params;
-	switch ((int)(!str))
-		case 1:
-			str = NULL_STRING;
+  unsigned long l;
 
-	j = pad = _strlen(str);
-	if (params->precision < pad)
-		j = pad = params->precision;
-	if (params->minus_flag)
-	{
-		if (params->precision != UINT_MAX)
-			for (i = 0; i < pad; i++)
-				sum += _putchar(*str++);
-		else
-			sum += _puts(str);
-	}
-	while (j++ < params->width)
-		sum += _putchar(pad_char);
-	if (!params->minus_flag)
-	{
-		if (params->precision != UINT_MAX)
-			for (i = 0; i < pad; i++)
-				sum += _putchar(*str++);
-		else
-			sum += _puts(str);
-	}
-	return (sum);
+  if (params->l_modifier)
+   l = va_arg(ap, unsigned long);
+  else if (params->h_modifier)
+   l = (unsigned short int)va_arg(ap, unsigned int);
+  else
+   l = (unsigned int)va_arg(ap, unsigned int);
+  params->unsign = 1;
+  return (print_number(convert(l, 10, 0, params), params));
 }
 
 /**
- * print_percent - prints string
+ * print_octal - prints octal
  * @ap: argument pointer
  * @params: the parameters struct
  *
  * Return: number chars printed
  */
-int print_percent(va_list ap, params_t *params)
+int print_octal(va_list ap, params_t *params)
 {
-	(void)ap;
-	(void)params;
-	return (_putchar('%'));
+  unsigned long l;
+
+  if (params->l_modifier)
+   l = va_arg(ap, unsigned long);
+  else if (params->h_modifier)
+   l = (unsigned short int)va_arg(ap, unsigned int);
+  else
+   l = (unsigned int)va_arg(ap, unsigned int);
+  return (print_number(convert(l, 8, 0, params), params));
 }
 
 /**
- * print_S - custom format specifier
+ * print_hex - prints hex
  * @ap: argument pointer
  * @params: the parameters struct
  *
  * Return: number chars printed
  */
-int print_S(va_list ap, params_t *params)
+int print_hex(va_list ap, params_t *params)
 {
-	char *str = va_arg(ap, char *);
-	char *hex;
-	int sum = 0;
+  unsigned long l;
 
-	if ((int)(!str))
-		return (_puts(NULL_STRING));
-	for (; *str; str++)
-	{
-		if ((*str > 0 && *str < 32) || *str >= 127)
-		{
-			sum += _putchar('\\');
-			sum += _putchar('x');
-			hex = convert(*str, 16, 0, params);
-			if (!hex[1])
-				sum += _putchar('0');
-			sum += _puts(hex);
-		}
-		else
-		{
-			sum += _putchar(*str);
-		}
-	}
-	return (sum);
+  if (params->l_modifier)
+   l = va_arg(ap, unsigned long);
+  else if (params->h_modifier)
+   l = (unsigned short int)va_arg(ap, unsigned int);
+  else
+   l = (unsigned int)va_arg(ap, unsigned int);
+  return (print_number(convert(l, 16, 0, params), params));
+}
+
+/**
+ * print_hex_upper - prints uppercase hex
+ * @ap: argument pointer
+ * @params: the parameters struct
+ *
+ * Return: number chars printed
+ */
+int print_hex_upper(va_list ap, params_t *params)
+{
+  unsigned long l;
+
+  if (params->l_modifier)
+   l = va_arg(ap, unsigned long);
+  else if (params->h_modifier)
+   l = (unsigned short int)va_arg(ap, unsigned int);
+  else
+   l = (unsigned int)va_arg(ap, unsigned int);
+  return (print_number(convert(l, 16, 1, params), params));
+}
+
+/**
+ * print_address - prints an address
+ * @ap: the va_list containing the address as an unsigned long
+ * @params: the parameter struct
+ *
+ * Return: chars printed
+ */
+int print_address(va_list ap, params_t *params)
+{
+  unsigned long addr = va_arg(ap, unsigned long);
+  char hex_digits[] = "0123456789abcdef";
+  char hex_str[sizeof(void *) * 2 + 3];  // enough space for a pointer in hex format
+  int i, n = 0;
+
+  // convert the address to a string of hexadecimal digits
+  hex_str[0] = '0';
+  hex_str[1] = 'x';
+  for (i = sizeof(void *) * 2 - 1; i >= 0; i--) {
+    hex_str[i + 2] = hex_digits[addr & 0xf];
+    addr >>= 4;
+  }
+  hex_str[sizeof(void *) * 2 + 2] = '\0';
+
+  // apply the format flags
+  params->hashtag_flag = 1;
+  params->length_modifier = LENGTH_L;
+  params->specifier = SPECIFIER_UNSIGNED_HEX;
+
+  // print the converted value with the appropriate format
+  n += print_number(hex_str, params);
+
+  return n;
 }
